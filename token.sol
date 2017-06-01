@@ -1,4 +1,6 @@
 event Transfer(address indexed from, address indexed to, uint256 value);
+mapping (address => bool) public frozenAccount; // is this in the correct spot?
+event FrozenFunds(address indexed, bool frozen);
 
 contract owned { // Why isn't this capitalized?
     address public owner;
@@ -47,6 +49,8 @@ contract MyToken is owned {
 
 /* Send coins */
 function transfer(address _to, uint256 _value) {
+    if (frozenAccount[msg.sender]) throw;
+
     /* Check if sender has balance and for overflows */
     if (balanceOf[msg.sender] < _value || balanceOf[_to] + _value < balanceOf[_to]) {
         throw;
@@ -64,4 +68,9 @@ function mintToken(address target, uint256 mintedAmount) onlyOwner {
     totalSupply += mintedAmount;
     Transfer(0, owner, mintedAmount); // comes out of thin air lol
     Transfer(owner, target, mintedAmount);
+}
+
+function freezeAccount(address target, bool freeze) onlyOwner {
+    frozenAccount[target] = freeze;
+    FrozenFunds(target, freeze);
 }
